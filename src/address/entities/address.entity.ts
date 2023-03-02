@@ -1,5 +1,5 @@
-import { CityEntity } from 'src/city/entities/city.entity';
-import { UserEntity } from 'src/user/entities/user.entity';
+import { CityEntity } from '../../city/entities/city.entity';
+import { UserEntity } from '../../user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -36,7 +36,7 @@ export class AddressEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @ManyToOne(() => UserEntity, (user) => user.adresses)
+  @ManyToOne(() => UserEntity, (user) => user.addresses)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user?: UserEntity;
 

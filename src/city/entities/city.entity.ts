@@ -1,11 +1,11 @@
-import { AddressEntity } from 'src/address/entities/address.entity';
-import { StateEntity } from 'src/state/entities/state.entity';
+import { AddressEntity } from '../../address/entities/address.entity';
+import { StateEntity } from '../../state/entities/state.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -31,7 +31,7 @@ export class CityEntity {
   @OneToMany(() => AddressEntity, (address) => address.city)
   addresses?: AddressEntity[];
 
-  @ManyToMany(() => StateEntity, (state) => state.cities)
+  @ManyToOne(() => StateEntity, (state) => state.cities)
   @JoinColumn({ name: 'state_id', referencedColumnName: 'id' })
   state?: StateEntity;
 }

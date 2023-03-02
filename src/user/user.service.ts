@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcrypt';
-import { CreateUserDto } from 'src/user/dtos/createUser.dtos';
-import { UserEntity } from 'src/user/entities/user.entity';
+import { CreateUserDto } from '../user/dtos/createUser.dtos';
+import { UserEntity } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -13,6 +17,14 @@ export class UserService {
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
+    const user = await this.findUserByEmail(createUserDto.email).catch(
+      () => undefined,
+    );
+
+    if (user) {
+      throw new BadGatewayException('email registered in system');
+    }
+
     const saltOrRounds = 10;
     const passwordHashed = await hash(createUserDto.password, saltOrRounds);
 
@@ -32,7 +44,13 @@ export class UserService {
       where: {
         id: userId,
       },
-      relations: ['addresses'],
+      relations: {
+        addresses: {
+          city: {
+            state: true,
+          },
+        },
+      },
     });
   }
 
@@ -45,6 +63,20 @@ export class UserService {
 
     if (!user) {
       throw new NotFoundException(`${userId} Not Found`);
+    }
+
+    return user;
+  }
+
+  async findUserByEmail(email: string): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({
+      where: {
+        email,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`${email} Not Found`);
     }
 
     return user;
