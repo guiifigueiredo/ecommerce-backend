@@ -1,13 +1,15 @@
 import {
   BadGatewayException,
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { hash } from 'bcrypt';
 import { CreateUserDto } from '../user/dtos/createUser.dtos';
 import { UserEntity } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
+import { UpdatePasswordDTO } from './dtos/updatePassword.dto';
+import { createPasswordHashed, validatePassword } from '../utils/password';
 
 @Injectable()
 export class UserService {
@@ -25,8 +27,7 @@ export class UserService {
       throw new BadGatewayException('email registered in system');
     }
 
-    const saltOrRounds = 10;
-    const passwordHashed = await hash(createUserDto.password, saltOrRounds);
+    const passwordHashed = await createPasswordHashed(createUserDto.password);
 
     return this.userRepository.save({
       ...createUserDto,
@@ -80,5 +81,27 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async updatePassword(updatePasswordDto: UpdatePasswordDTO, userId: number) {
+    const user = await this.findUserById(userId);
+
+    const passwordHashed = await createPasswordHashed(
+      updatePasswordDto.newPassword,
+    );
+
+    const isMatch = await validatePassword(
+      updatePasswordDto.lastPassword,
+      user.password || '',
+    );
+
+    if (!isMatch) {
+      throw new BadRequestException('Last password is invalid');
+    }
+
+    return this.userRepository.save({
+      ...user,
+      password: passwordHashed,
+    });
   }
 }
